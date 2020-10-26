@@ -6,6 +6,12 @@ import {useCombobox} from '../use-combobox'
 import {getItems} from '../workerized-filter-cities'
 import {useAsync, useForceRerender} from '../utils'
 
+/*
+  -React.Memo accept a second argument(a custom compare function )
+  -true: not unnecessary
+  -false: unnecessary
+*/
+
 function Menu({
   items,
   getMenuProps,
@@ -21,8 +27,8 @@ function Menu({
           getItemProps={getItemProps}
           item={item}
           index={index}
-          selectedItem={selectedItem}
-          highlightedIndex={highlightedIndex}
+          isSelected={selectedItem?.id === item.id}
+          isHighlighted={highlightedIndex === index}
         >
           {item.name}
         </ListItem>
@@ -31,17 +37,16 @@ function Menu({
   )
 }
 // 🐨 Memoize the Menu here using React.memo
+Menu = React.memo(Menu)
 
 function ListItem({
   getItemProps,
   item,
   index,
-  selectedItem,
-  highlightedIndex,
+  isSelected,
+  isHighlighted,
   ...props
 }) {
-  const isSelected = selectedItem?.id === item.id
-  const isHighlighted = highlightedIndex === index
   return (
     <li
       {...getItemProps({
@@ -56,7 +61,25 @@ function ListItem({
     />
   )
 }
+
+function listItemPropsAreEqual(prevProps, nextProps) {
+  if (prevProps.getItemProps !== nextProps.getItemProps) return false
+  if (prevProps.item !== nextProps.item) return false
+  if (prevProps.index !== nextProps.index) return false
+  if (prevProps.selectedItem !== nextProps.selectedItem) return false
+  
+  if(prevProps.highlightedIndex !== nextProps.highlightedIndex) {
+    if((nextProps.highlightedIndex === nextProps.index && prevProps.highlightedIndex !== prevProps.index) ||
+       (prevProps.highlightedIndex === prevProps.index && nextProps.highlightedIndex !== nextProps.index)) {
+      return false
+    }
+  }
+
+  return true
+}
+
 // 🐨 Memoize the ListItem here using React.memo
+ListItem = React.memo(ListItem)
 
 function App() {
   const forceRerender = useForceRerender()
